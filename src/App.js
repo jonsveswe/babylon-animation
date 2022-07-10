@@ -7,6 +7,7 @@ import {Row, Col} from 'react-bootstrap'
 import React, { useRef, useEffect, useState, Fragment } from "react";
 import { FreeCamera, Vector3, HemisphericLight, MeshBuilder } from "@babylonjs/core";
 import SceneComponent from "./SceneComponent"; 
+import apiRequest from "./apiRequest";
 /* import { Engine } from "@babylonjs/core/Engines/engine";
 import { Scene } from "@babylonjs/core/scene";
 import { Vector3 } from "@babylonjs/core/Maths/math";
@@ -23,12 +24,60 @@ import "@babylonjs/core/Meshes/Builders/groundBuilder";
 import * as BABYLON from '@babylonjs/core/Legacy/legacy';*/
 
 
-
 function App() {
+  const [orientation, setOrientation] = useState({pitch: 0, roll: 45, yaw: 45});
+  const [fetchError, setFetchError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const API_URL = 'http://169.254.18.186:5000/orientation';
+  let X = 0;
+  let Y = 0;
+  let Pitch = 0;
+  let Roll = 0;
+  let Yaw = 0;
+  useEffect(() => {
+    console.log("useEffect main app");
+    const fetchOrientation = async () => {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw Error('Did not receive expected data');
+        const data = await response.json();
+        Pitch = data.pitch;
+        Roll = data.roll;
+        Yaw = data.yaw;
+        //setOrientation(data);
+        //setFetchError(null);
+      } catch (error) {
+        setFetchError(error.message);
+      } finally {
+        //setIsLoading(false);
+        //console.log(orientation);
+      }
+    }
+    setInterval(()=>{
+      fetchOrientation();
+/*       const newOrientation = {
+        pitch: 0,
+        roll: orientation.roll + 20,
+        yaw: orientation.yaw + 20,
+      };
+  
+      setOrientation(newOrientation); */
+
+      //console.log("Hej");
+      //X = X + 0.04;
+      //Y = Y + 0.04;
+
+      //console.log(orientation);
+    }, 100);
+    
+  }, [])
+
   let box1;
   let box2;
 
   const onSceneReady1 = (scene) => {
+    //scene.clearColor = Color3(1,1,1);
+   
     // This creates and positions a free camera (non-mesh)
     var camera = new FreeCamera("camera1", new Vector3(0, 5, -10), scene);
   
@@ -80,7 +129,7 @@ function App() {
     box2.position.y = 1;
   
     // Our built-in 'ground' shape.
-    //MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
+    MeshBuilder.CreateGround("ground", { width: 6, height: 6 }, scene);
   };
   /**
    * Will run on every frame render.  We are spinning the box on y-axis.
@@ -89,14 +138,41 @@ function App() {
     if (box1 !== undefined) {
       var deltaTimeInMillis = scene.getEngine().getDeltaTime(); 
       const rpm = 10;
+      box1.rotation.x += (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
       box1.rotation.y += (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
+      box1.rotation.z += (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
     }
   }; 
   const onRender2 = (scene) => {
     if (box2 !== undefined) {
-      var deltaTimeInMillis = scene.getEngine().getDeltaTime(); 
-      const rpm = 30;
-      box2.rotation.y += (rpm / 60) * Math.PI * 2 * (deltaTimeInMillis / 1000);
+      box2.rotation.x = Pitch*Math.PI/180;
+      box2.rotation.y = Yaw*Math.PI/180;
+      box2.rotation.z = Roll*Math.PI/180;
+      //box2.rotation.x = orientation.roll*Math.PI/180;
+      //box2.rotation.y = orientation.pitch*Math.PI/180;
+      //box2.rotation.x = X;
+      //box2.rotation.y = Y;
+     // box2.rotation.z += orientation.yaw*Math.PI/180;
+ /*      setTimeout(()=>{
+        const fetchOrientation = async () => {
+          try {
+            const response = await fetch(API_URL);
+            if (!response.ok) throw Error('Did not receive expected data');
+            const data = await response.json();
+            setOrientation(data);
+            setFetchError(null);
+          } catch (error) {
+            setFetchError(error.message);
+          } finally {
+            setIsLoading(false);
+            console.log(orientation);
+            box2.rotation.x = orientation.pitch;
+            box2.rotation.y = orientation.roll;
+            box2.rotation.z = orientation.yaw;
+          }
+        }
+        fetchOrientation();
+      }, 200); */
     }
   }; 
 
