@@ -6,7 +6,8 @@ export default ({ antialias, engineOptions, adaptToDeviceRatio, sceneOptions, on
 
   // set up basic engine and scene
   useEffect(() => {
-    const { current: canvas } = reactCanvas;
+    //const { current: canvas } = reactCanvas;
+    const canvas = reactCanvas.current;
 
     if (!canvas) return;
 
@@ -40,5 +41,5 @@ export default ({ antialias, engineOptions, adaptToDeviceRatio, sceneOptions, on
     };
   }, [antialias, engineOptions, adaptToDeviceRatio, sceneOptions, onRender, onSceneReady]);
 
-  return <canvas ref={reactCanvas} {...rest} />;
+  return <canvas style={{width: '100%', height: '100%', backgroundColor: 'white'}} ref={reactCanvas} {...rest} />;
 };
